@@ -2,3 +2,5 @@
 build
 *.c
 *.so
+
+soft_dtw.egg-info

@@ -1,8 +1,20 @@
+#! /usr/bin/env python
 from __future__ import print_function
 import os.path
 import sys
-import setuptools
-from numpy.distutils.core import setup
+
+from setuptools import find_packages, setup
+from setuptools.extension import Extension
+from Cython.Build import cythonize
+
+import numpy
+
+extensions = [
+    Extension(
+        "sdtw.soft_dtw_fast",
+        ['sdtw/soft_dtw_fast.pyx'],
+    ),
+]
 
 
 try:
@@ -10,6 +22,11 @@ try:
 except ImportError:
     print('numpy is required during installation')
     sys.exit(1)
+
+# get __version__ from _version.py
+ver_file = os.path.join('sdtw', '_version.py')
+with open(ver_file) as f:
+    exec(f.read())
 
 
 DISTNAME = 'soft-dtw'
@@ -20,30 +37,15 @@ MAINTAINER_EMAIL = ''
 URL = 'https://github.com/mblondel/soft-dtw/'
 LICENSE = 'Simplified BSD'
 DOWNLOAD_URL = 'https://github.com/mblondel/soft-dtw/'
-VERSION = '0.1.dev0'
+VERSION = __version__
 
-
-def configuration(parent_package='', top_path=None):
-    from numpy.distutils.misc_util import Configuration
-
-    config = Configuration(None, parent_package, top_path)
-
-    config.add_subpackage('sdtw')
-
-    return config
+INSTALL_REQUIRES = ['numpy', 'scikit-learn', 'cython', 'torch']
 
 
 if __name__ == '__main__':
-    old_path = os.getcwd()
-    local_path = os.path.dirname(os.path.abspath(sys.argv[0]))
 
-    os.chdir(local_path)
-    sys.path.insert(0, local_path)
-
-    setup(configuration=configuration,
-          name=DISTNAME,
+    setup(name=DISTNAME,
           maintainer=MAINTAINER,
-          include_package_data=True,
           maintainer_email=MAINTAINER_EMAIL,
           description=DESCRIPTION,
           license=LICENSE,
@@ -51,15 +53,9 @@ if __name__ == '__main__':
           version=VERSION,
           download_url=DOWNLOAD_URL,
           long_description=LONG_DESCRIPTION,
+          long_description_content_type='text/x-rst',
           zip_safe=False,  # the package can run out of an .egg file
-          classifiers=[
-              'Intended Audience :: Science/Research',
-              'Intended Audience :: Developers', 'License :: OSI Approved',
-              'Programming Language :: C', 'Programming Language :: Python',
-              'Topic :: Software Development',
-              'Topic :: Scientific/Engineering',
-              'Operating System :: Microsoft :: Windows',
-              'Operating System :: POSIX', 'Operating System :: Unix',
-              'Operating System :: MacOS'
-             ]
-          )
+          packages=find_packages(),
+          include_dirs=[numpy.get_include()],
+          install_requires=INSTALL_REQUIRES,
+          ext_modules=cythonize(extensions))
